@@ -3,7 +3,7 @@
 - **Depends on:** 1
 - **Contract:**
   - In: raw videos (MKV/MP4, including variable FPS from the tablets)
-  - Requires: FFmpeg; trim between the flashes; single target FPS
+  - Requires: FFmpeg; trim between the START and END sync markers; single target FPS
   - Delivers: `extract/synced/<role>.mp4` with the same frame count on every camera
 - **Pre-work:** none
 - **Out of scope:** —

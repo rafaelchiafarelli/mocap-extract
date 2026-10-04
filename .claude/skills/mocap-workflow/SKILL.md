@@ -14,7 +14,7 @@ The pipeline itself is documented in `docs/diagrams/` (draw.io, stages P1–P5 a
 Don't use the word "Track" — it doesn't map to anything here. The real hierarchy is:
 
 - **Initiative** — a top-level effort (e.g. `capture`, `face_pipeline`, `props`). Folder: `initiatives/<initiative>/`.
-- **Epic** — a grouping of related tasks within an initiative (often one pipeline step, e.g. `sync_flash` for 2.1). Folder: `initiatives/<initiative>/epics/<epic>/`.
+- **Epic** — a grouping of related tasks within an initiative (often one pipeline step, e.g. `recording` for P2). Folder: `initiatives/<initiative>/epics/<epic>/`.
 - **Task** — the atomic unit of work. One file, one session, one testable **contract**. File: `initiatives/<initiative>/epics/<epic>/tasks/<task>.md`.
 - **Contract** — what a task delivers that other tasks or code will depend on: a function interface, a file format/schema (`config.yaml`, `session.json`, `calibration.toml`, `timestamps_[role].csv`, `props.yaml`, `mocap_data.json`), or a concrete update to a module. Smaller is better. The goal is that one file equals one incremental contract step — if a task's contract is ballooning to cover multiple deliverables, that's a signal to split it during planning, not to push through it.
 
@@ -37,12 +37,12 @@ names are flat in the first place.)
 | container | `features` | `dev` | all feature work — integration point below `dev` |
 | initiative | `<initiative>` (e.g. `capture`) | `features` | `initiatives/<initiative>/` |
 | container | `epics` | `<initiative>` | the initiative's epics — integration point |
-| epic | `<epic>` (e.g. `sync_flash`) | `epics` | `initiatives/<initiative>/epics/<epic>/` |
+| epic | `<epic>` (e.g. `recording`) | `epics` | `initiatives/<initiative>/epics/<epic>/` |
 | container | `tasks` | `<epic>` | the epic's tasks — integration point |
-| task | `<task>` (e.g. `3-esp32-led-firmware`) | `tasks` | `initiatives/<initiative>/epics/<epic>/tasks/<task>.md` — **the working branch; all task commits land here** |
+| task | `<task>` (e.g. `3-take-lifecycle-cli`) | `tasks` | `initiatives/<initiative>/epics/<epic>/tasks/<task>.md` — **the working branch; all task commits land here** |
 
-Example chain (sync flash epic, task 3):
-`dev → features → capture → epics → sync_flash → tasks → 3-esp32-led-firmware`
+Example chain (recording epic, task 3):
+`dev → features → baseline → epics → recording → tasks → 3-take-lifecycle-cli`
 
 Create a parent before its child; don't create a level you won't use in this
 clone. The branch you actually commit on is the leaf `<task>` branch — every
