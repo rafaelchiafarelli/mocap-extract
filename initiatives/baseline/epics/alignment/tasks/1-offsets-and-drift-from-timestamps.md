@@ -2,7 +2,7 @@
 
 - **Depends on:** bootstrap
 - **Contract:**
-  - In: `take.json` (START/END `SyncEvent`s) + `report.json` + `raw/<role>.timestamps.csv`
+  - In: `take.json` (START/END `SyncEvent`s) + `report.json` + `prep/<role>.timestamps.csv` (frame, host_ts_ns)
   - Requires: every camera's timestamps on the recorder's host clock; START marker = t0; per-camera offset = first frame vs t0; drift = measured vs nominal frame period between START and END
   - Delivers: `compute_alignment(take_dir) -> Alignment`
 - **Pre-work:** none

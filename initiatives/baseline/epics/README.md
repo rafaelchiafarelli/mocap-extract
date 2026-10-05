@@ -1,6 +1,6 @@
 # baseline — epics (execution order)
 
-1. **bootstrap** — Skeleton (1 task)
+1. **bootstrap** — Skeleton and take intake (2 tasks)
 2. **alignment** — Alignment (P3.1) (2 tasks)
 3. **calibration** — Calibration (2 tasks)
 4. **body** — Body and hands (P3.2) (2 tasks)
