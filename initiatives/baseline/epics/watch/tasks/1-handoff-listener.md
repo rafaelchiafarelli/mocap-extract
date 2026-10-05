@@ -1,6 +1,6 @@
 ## 1. Hand-off listener (`mocap-extract watch`)
 
-- **Depends on:** bootstrap/2; alignment; body/1; mocap-contracts v0.1.0 (messages-v0/6)
+- **Depends on:** bootstrap/2; alignment; body/1; mocap-contracts v0.1.0 (messages-v0/7)
 - **Contract:**
   - In: `TakeClosed` / `CameraFileReady` events (generated ZeroMQ receiver from `mocap_contracts`); the data root
   - Requires: each step starts as soon as its own inputs are verified (`check_file`), never on a take-level gate:
