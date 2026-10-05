@@ -2,9 +2,9 @@
 
 - **Depends on:** 1
 - **Contract:**
-  - In: a take folder handed off by the recorder (`mocap-capture` handoff/2)
-  - Requires: `TakeManifest` (`manifest.json`) from mocap-contracts; `layout`
-  - Delivers: `check_take(take_dir)`, which every `mocap-extract` command runs first. A take without a manifest, or with a missing file or a wrong sha256, is refused with the list of bad files and never processed.
+  - In: a take folder filled file by file by the recorder (`mocap-capture` handoff), with its sidecars (`closed.json`, `<file>.ready.json`)
+  - Requires: `TakeClosed`, `CameraFileReady` and `layout` from mocap-contracts
+  - Delivers: `check_file(take_dir, rel_path)`, which verifies a file against its sidecar (size, sha256) before any step reads it, and `take_state(take_dir)`, which reports the roles expected, the files arrived and verified, and the files missing, all **from the sidecars on disk**. A file without a sidecar or that doesn't match it is never processed.
 - **Pre-work:** none
-- **Out of scope:** copying takes (recorder side)
-- **Tests:** good take passes; missing manifest, missing file, corrupted file each refused
+- **Out of scope:** receiving the events (watch/1); copying files (recorder side)
+- **Tests:** good file passes; missing sidecar, wrong size, wrong sha256 each refused; `take_state` of a half-arrived take lists exactly what's missing
