@@ -52,7 +52,8 @@ FreeMoCap's headless entry point is
 
 ## Status
 
-bootstrap/1 done: package skeleton, CLI, FreeMoCap environment (Python 3.12,
-torch 2.8.0+cu128, `mocap-contracts` v0.2.1). Plan:
+bootstrap done: package skeleton, CLI, FreeMoCap environment (Python 3.12,
+torch 2.8.0+cu128, `mocap-contracts` v0.2.1) and take intake
+(`mocap_extract.intake`: `check_file`, `take_state`). Plan:
 [`initiatives/baseline/`](initiatives/baseline/baseline.md). Dependencies:
 `mocap-studio/DEPENDENCIES.md`.
