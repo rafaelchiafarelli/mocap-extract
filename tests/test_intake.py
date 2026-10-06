@@ -1,61 +1,17 @@
-import hashlib
 from pathlib import Path
 
 import pytest
-from mocap_contracts import CameraFileReady, FileKind, SyncEvent, SyncKind, SyncSource, TakeClosed, layout, to_json
+from mocap_contracts import FileKind, layout
+from takes import SESSION, TAKE, put_closed, put_timestamps, put_video
 
 from mocap_extract.intake import FileRejected, check_file, take_state
-
-TAKE = "take-001"
 
 
 @pytest.fixture
 def take_dir(tmp_path: Path) -> Path:
-    take = layout.take_dir(tmp_path, "session-1", TAKE)
+    take = layout.take_dir(tmp_path, SESSION, TAKE)
     take.mkdir(parents=True)
     return take
-
-
-def put_file(take: Path, rel_path: str, data: bytes, role: str, kind: str, **override) -> Path:
-    path = take / rel_path
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(data)
-    fields = dict(
-        take_id=TAKE,
-        role=role,
-        kind=FileKind.Value(kind),
-        path=rel_path,
-        size_bytes=len(data),
-        sha256=hashlib.sha256(data).hexdigest(),
-        frames=3,
-        first_ts_ns=1_000,
-        last_ts_ns=3_000,
-    )
-    fields.update(override)
-    layout.ready_sidecar(path).write_text(to_json(CameraFileReady(**fields)), encoding="utf-8")
-    return path
-
-
-def put_timestamps(take: Path, role: str, **override) -> Path:
-    return put_file(take, f"raw/{role}.timestamps.csv", b"frame,host_ts_ns\n0,1000\n", role,
-                    "FILE_KIND_TIMESTAMPS", **override)
-
-
-def put_video(take: Path, role: str, **override) -> Path:
-    return put_file(take, f"prep/{role}.mkv", b"\x1a\x45\xdf\xa3video-" + role.encode(), role,
-                    "FILE_KIND_VIDEO", **override)
-
-
-def put_closed(take: Path, roles: list[str], take_id: str = TAKE) -> None:
-    closed = TakeClosed(
-        take_id=take_id,
-        roles=roles,
-        start=SyncEvent(kind=SyncKind.Value("SYNC_KIND_START"), host_ts_ns=1_000,
-                        source=SyncSource.Value("SYNC_SOURCE_MANUAL")),
-        end=SyncEvent(kind=SyncKind.Value("SYNC_KIND_END"), host_ts_ns=3_000,
-                      source=SyncSource.Value("SYNC_SOURCE_MANUAL")),
-    )
-    layout.closed_json(take).write_text(to_json(closed), encoding="utf-8")
 
 
 # ---------------------------------------------------------------- check_file
