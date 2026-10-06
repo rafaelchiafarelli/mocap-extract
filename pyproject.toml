@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mocap-extract"
+version = "0.1.0.dev0"
+description = "P3 on the processing PC: synchronised videos to 3D body and hand motion"
+readme = "README.md"
+# FreeMoCap 1.8.2 and skellytracker need <3.13; 3.12 is the shared minor (DEPENDENCIES.md).
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "mocap-contracts[zmq] @ git+https://github.com/rafaelchiafarelli/mocap-contracts.git@v0.2.1",
+    "freemocap==1.8.2",
+    "opencv-contrib-python==4.8.*",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[project.scripts]
+mocap-extract = "mocap_extract.cli:main"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

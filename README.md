@@ -33,9 +33,26 @@ mocap-extract watch      # long-running: processes takes as they arrive
 
 Every step can also be run by hand on one take.
 
+## Development
+
+```bash
+make venv     # python3.12 venv in .venv, installs the package and FreeMoCap 1.8.2
+make test     # full suite
+.venv/bin/mocap-extract --version
+```
+
+FreeMoCap's headless entry point is
+`freemocap.core_processes.process_motion_capture_videos.process_recording_headless`
+(pass `run_blender=False, make_jupyter_notebook=False`). Two quirks of 1.8.2:
+
+- Importing it while the root logger already has handlers fails with a circular
+  import. Import FreeMoCap before configuring logging, or in its own process.
+- Importing it with no handlers installs its own TRACE-level console handler
+  and writes a log file under `~/freemocap_data/logs_info_and_settings/`.
+
 ## Status
 
-Planned, no code yet. It starts once `mocap-contracts` v0.1.0 is released.
-Plan: [`initiatives/baseline/`](initiatives/baseline/baseline.md). Dependencies
-(FreeMoCap 1.8.2, CUDA 12.8 torch for the RTX 4080):
+bootstrap/1 done: package skeleton, CLI, FreeMoCap environment (Python 3.12,
+torch 2.8.0+cu128, `mocap-contracts` v0.2.1). Plan:
+[`initiatives/baseline/`](initiatives/baseline/baseline.md). Dependencies:
 `mocap-studio/DEPENDENCIES.md`.
