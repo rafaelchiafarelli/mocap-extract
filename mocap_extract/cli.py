@@ -14,6 +14,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     align = sub.add_parser("align", help="resample every camera of one take to extract/synced/<role>.mp4")
     align.add_argument("take_dir", type=Path, help="the take folder, as the recorder handed it off")
+
+    calibrate = sub.add_parser("calibrate", help="FreeMoCap calibration of an aligned CALIBRATION take")
+    calibrate.add_argument("take_dir", type=Path, help="the CALIBRATION take folder, after align")
+    calibrate.add_argument("--max-error-px", type=float,
+                           help="exit 2 when the mean reprojection error is above this")
     return parser
 
 
@@ -22,6 +27,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "align":
         return _align(args.take_dir)
+    if args.command == "calibrate":
+        return _calibrate(args.take_dir, args.max_error_px)
     parser.print_help()
     return 0
 
@@ -43,4 +50,23 @@ def _align(take_dir: Path) -> int:
     except AlignmentError as e:
         print(f"mocap-extract align: {e}", file=sys.stderr)
         return 1
+    return 0
+
+
+def _calibrate(take_dir: Path, max_error_px: float | None) -> int:
+    from mocap_extract.calibration import CalibrationError, calibrate
+
+    try:
+        result = calibrate(take_dir)
+    except CalibrationError as e:
+        print(f"mocap-extract calibrate: {e}", file=sys.stderr)
+        return 1
+    print(f"wrote {result.toml_path}")
+    print(f"reprojection error {result.reprojection_error_px:.2f} px")
+    for role, error in result.camera_error_px.items():
+        print(f"  {role}: {error:.2f} px")
+    print("ground plane: board" if result.groundplane else f"ground plane: not set ({result.groundplane_error})")
+    if max_error_px is not None and result.reprojection_error_px > max_error_px:
+        print(f"mocap-extract calibrate: error above {max_error_px:g} px", file=sys.stderr)
+        return 2
     return 0

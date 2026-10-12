@@ -29,6 +29,7 @@ data, `index.json` (`ExtractIndex`) and `quality.json`/`quality.md`.
 
 ```bash
 mocap-extract align TAKE_DIR   # alignment: extract/synced/<role>.mp4 for every camera
+mocap-extract calibrate TAKE_DIR [--max-error-px 1.0]   # CALIBRATION take -> <session>/calibration/calibration.toml
 mocap-extract watch            # planned, long-running: processes takes as they arrive
 ```
 
@@ -58,6 +59,9 @@ torch 2.8.0+cu128, `mocap-contracts` v0.2.1) and take intake
 (`mocap_extract.intake`: `check_file`, `take_state`).
 alignment done: `alignment.compute_alignment` (offset and drift per camera) and
 `resample.resample_role` (`extract/synced/<role>.mp4` at 30 fps, nearest frame,
-warns past 33.3 ms), run on one take with `mocap-extract align`. Plan:
+warns past 33.3 ms), run on one take with `mocap-extract align`.
+calibration/1 done: `calibration.calibrate` (FreeMoCap ChArUco calibration of a
+CALIBRATION take, board from `take.json`, reprojection error overall and per
+camera), run with `mocap-extract calibrate`. Plan:
 [`initiatives/baseline/`](initiatives/baseline/baseline.md). Dependencies:
 `mocap-studio/DEPENDENCIES.md`.
