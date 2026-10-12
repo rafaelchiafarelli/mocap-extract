@@ -19,6 +19,9 @@ def build_parser() -> argparse.ArgumentParser:
     calibrate.add_argument("take_dir", type=Path, help="the CALIBRATION take folder, after align")
     calibrate.add_argument("--max-error-px", type=float,
                            help="exit 2 when the mean reprojection error is above this")
+
+    body = sub.add_parser("body", help="FreeMoCap body and hands 3D of an aligned PERFORMANCE take")
+    body.add_argument("take_dir", type=Path, help="the PERFORMANCE take folder, after align (and calibrate)")
     return parser
 
 
@@ -29,6 +32,8 @@ def main(argv: list[str] | None = None) -> int:
         return _align(args.take_dir)
     if args.command == "calibrate":
         return _calibrate(args.take_dir, args.max_error_px)
+    if args.command == "body":
+        return _body(args.take_dir)
     parser.print_help()
     return 0
 
@@ -69,4 +74,17 @@ def _calibrate(take_dir: Path, max_error_px: float | None) -> int:
     if max_error_px is not None and result.reprojection_error_px > max_error_px:
         print(f"mocap-extract calibrate: error above {max_error_px:g} px", file=sys.stderr)
         return 2
+    return 0
+
+
+def _body(take_dir: Path) -> int:
+    from mocap_extract.body import BodyError, extract_body
+
+    try:
+        body = extract_body(take_dir)
+    except BodyError as e:
+        print(f"mocap-extract body: {e}", file=sys.stderr)
+        return 1
+    print(f"3D: {body.data_3d} ({body.frames} frames, cameras {', '.join(body.roles)})")
+    print(f"FreeMoCap recording folder (open it in the FreeMoCap Blender add-on): {body.recording_dir}")
     return 0
