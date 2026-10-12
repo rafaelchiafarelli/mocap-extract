@@ -121,6 +121,10 @@ Once a task file is ready and its branch exists, the loop is:
 
 **Large binaries stay out of git.** Raw takes (`.mkv`), aligned videos, `.npy` arrays, model weights, and renders are referenced by path or fetched by a script — never committed directly. Small fixtures needed by tests are the exception and should be kept as small as possible.
 
+## Showing work to Rafael
+
+Rafael opens files from Windows (Rafael, 2026-10-12). Anything for him to look at (renders, comparison videos, preview images, reports, generated PDFs) goes in **`G:\mocap-studio-downloads\review\<YYYY-MM-DD>\`** (`/mnt/g/mocap-studio-downloads/review/<YYYY-MM-DD>/` from WSL), with a name that says what it is, and the reply gives that Windows path. Never point him only at a WSL path (`~/...`, `/tmp`, a scratchpad). Film outputs still live in the film root; the review copy is what to point him at. Review files are never committed.
+
 ## Push back
 
 Push back — stop and bring options to Rafael instead of proceeding — in these cases:
