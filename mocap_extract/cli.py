@@ -22,6 +22,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     body = sub.add_parser("body", help="FreeMoCap body and hands 3D of an aligned PERFORMANCE take")
     body.add_argument("take_dir", type=Path, help="the PERFORMANCE take folder, after align (and calibrate)")
+
+    mono = sub.add_parser("mono", help="single-camera 3D (MediaPipe Pose) from one video, for tests and previews")
+    mono.add_argument("video", type=Path)
+    mono.add_argument("take_dir", type=Path, help="folder to write extract/freemocap/output_data/ into")
+    mono.add_argument("--start", type=float, help="seconds")
+    mono.add_argument("--end", type=float, help="seconds")
     return parser
 
 
@@ -34,6 +40,8 @@ def main(argv: list[str] | None = None) -> int:
         return _calibrate(args.take_dir, args.max_error_px)
     if args.command == "body":
         return _body(args.take_dir)
+    if args.command == "mono":
+        return _mono(args.video, args.take_dir, args.start, args.end)
     parser.print_help()
     return 0
 
@@ -87,4 +95,16 @@ def _body(take_dir: Path) -> int:
         return 1
     print(f"3D: {body.data_3d} ({body.frames} frames, cameras {', '.join(body.roles)})")
     print(f"FreeMoCap recording folder (open it in the FreeMoCap Blender add-on): {body.recording_dir}")
+    return 0
+
+
+def _mono(video: Path, take_dir: Path, start: float | None, end: float | None) -> int:
+    from mocap_extract.mono import MonoError, mono_take
+
+    try:
+        mono = mono_take(video, take_dir, start, end)
+    except MonoError as e:
+        print(f"mocap-extract mono: {e}", file=sys.stderr)
+        return 1
+    print(f"3D (one camera): {mono.body} ({mono.frames} frames at 30 fps, {mono.missing_frames} without a person)")
     return 0
