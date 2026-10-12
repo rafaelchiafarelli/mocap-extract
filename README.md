@@ -30,6 +30,7 @@ data, `index.json` (`ExtractIndex`) and `quality.json`/`quality.md`.
 ```bash
 mocap-extract align TAKE_DIR   # alignment: extract/synced/<role>.mp4 for every camera
 mocap-extract calibrate TAKE_DIR [--max-error-px 1.0]   # CALIBRATION take -> <session>/calibration/calibration.toml
+mocap-extract body TAKE_DIR    # PERFORMANCE take -> FreeMoCap 3D in extract/freemocap/ (a FreeMoCap recording folder)
 mocap-extract watch            # planned, long-running: processes takes as they arrive
 ```
 
@@ -39,6 +40,7 @@ Every step can also be run by hand on one take.
 
 ```bash
 make venv     # python3.12 venv in .venv, installs the package and FreeMoCap 1.8.2
+make fixtures # FreeMoCap's test recording, used by the body tests (not committed)
 make test     # full suite
 .venv/bin/mocap-extract --version
 ```
@@ -62,6 +64,8 @@ alignment done: `alignment.compute_alignment` (offset and drift per camera) and
 warns past 33.3 ms), run on one take with `mocap-extract align`.
 calibration/1 done: `calibration.calibrate` (FreeMoCap ChArUco calibration of a
 CALIBRATION take, board from `take.json`, reprojection error overall and per
-camera), run with `mocap-extract calibrate`. Plan:
+camera), run with `mocap-extract calibrate`; calibration/2 done (the still board is the
+ground plane). body/1 done: `body.track_role` (2D, one camera) and
+`body.reconstruct` (3D), run with `mocap-extract body`. Plan:
 [`initiatives/baseline/`](initiatives/baseline/baseline.md). Dependencies:
 `mocap-studio/DEPENDENCIES.md`.
