@@ -5,6 +5,7 @@ circle around the origin at the same height and looks at the origin; the board w
 """
 
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 
 import cv2
@@ -18,6 +19,15 @@ WIDTH, HEIGHT, FOCAL = 1280, 720, 900.0
 K = np.array([[FOCAL, 0, WIDTH / 2], [0, FOCAL, HEIGHT / 2], [0, 0, 1]])
 PX_PER_MM = 2.0
 QUIET_ZONE_MM = 40
+
+
+@dataclass(frozen=True)
+class Truth:
+    centres: dict[str, np.ndarray]
+    """Camera centres (mm, world) by role."""
+    first_board_rotation: np.ndarray
+    first_board_centre: np.ndarray
+    """The board's first pose (the one held still), board -> world."""
 
 
 def rotation(yaw: float, pitch: float, roll: float) -> np.ndarray:
@@ -72,8 +82,8 @@ def write_video(path: Path, frames: list[np.ndarray]) -> None:
 
 def make_calibration_take(take_dir: Path, board: CalibrationBoard, roles: list[str], azimuths_deg: list[float],
                           radius_mm: float = 2500, frames: int = 90, seed: int = 0,
-                          still_frames: int = 0) -> list[np.ndarray]:
-    """Write take.json and extract/synced/<role>.mp4; return the true camera centres (mm), in role order.
+                          still_frames: int = 0) -> Truth:
+    """Write take.json and extract/synced/<role>.mp4; return where the cameras and the board really were.
 
     The board holds its first pose for `still_frames` more frames, as when it's laid still for the ground plane.
     """
@@ -98,4 +108,5 @@ def make_calibration_take(take_dir: Path, board: CalibrationBoard, roles: list[s
         notes="synthetic", stream_host="192.168.1.20", video_port=8080, sync_port=8081, control_port=8082,
         stats_port=8083)) for role in roles)
     layout.take_json(take_dir).write_text(to_json(take), encoding="utf-8")
-    return [centre for _, centre in cams]
+    return Truth(centres={role: c for role, (_, c) in zip(roles, cams)},
+                 first_board_rotation=poses[0][0], first_board_centre=poses[0][1])

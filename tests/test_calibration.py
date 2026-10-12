@@ -34,8 +34,7 @@ def camera_centres(toml_path: Path) -> dict[str, np.ndarray]:
 
 
 def test_calibration_recovers_the_cameras_in_mm(take_dir):
-    truth = dict(zip(ROLES, make_calibration_take(take_dir, CalibrationBoard(**BOARD), ROLES, [-35, 0, 35],
-                                                        still_frames=15)))
+    truth = make_calibration_take(take_dir, CalibrationBoard(**BOARD), ROLES, [-35, 0, 35], still_frames=15).centres
 
     result = calibrate(take_dir)
 
@@ -48,6 +47,29 @@ def test_calibration_recovers_the_cameras_in_mm(take_dir):
     for a, b in [("body_1", "body_2"), ("body_2", "body_3"), ("body_1", "body_3")]:
         true_mm = np.linalg.norm(truth[a] - truth[b])
         assert np.linalg.norm(found[a] - found[b]) == pytest.approx(true_mm, rel=0.02)
+
+
+def kabsch(src: np.ndarray, dst: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """R, t with dst ~ R @ src + t (rows are points)."""
+    cs, cd = src.mean(0), dst.mean(0)
+    u, _, vt = np.linalg.svd((src - cs).T @ (dst - cd))
+    d = np.sign(np.linalg.det(vt.T @ u.T))
+    r = vt.T @ np.diag([1, 1, d]) @ u.T
+    return r, cd - r @ cs
+
+
+def test_ground_plane_is_the_still_board(take_dir):
+    truth = make_calibration_take(take_dir, CalibrationBoard(**BOARD), ROLES, [-35, 0, 35], still_frames=15)
+
+    result = calibrate(take_dir)
+
+    assert result.groundplane, result.groundplane_error
+    found = camera_centres(result.toml_path)
+    r, t = kabsch(np.array([truth.centres[k] for k in ROLES]), np.array([found[k] for k in ROLES]))
+    normal = r @ truth.first_board_rotation[:, 2]
+    assert abs(normal[2]) > 0.995  # Z perpendicular to the board
+    board_centre = r @ truth.first_board_centre + t
+    assert abs(board_centre[2]) < 10  # the board lies in z = 0 (mm)
 
 
 def test_cli_calibrate(take_dir, capsys):
