@@ -25,10 +25,11 @@ recorder (mocap-capture) ──files + Harpia ZeroMQ events──▶ mocap-extra
 It writes `extract/` in the take folder: synced videos, calibration, 2D/3D
 data, `index.json` (`ExtractIndex`) and `quality.json`/`quality.md`.
 
-## How it's used (planned)
+## How it's used
 
 ```bash
-mocap-extract watch      # long-running: processes takes as they arrive
+mocap-extract align TAKE_DIR   # alignment: extract/synced/<role>.mp4 for every camera
+mocap-extract watch            # planned, long-running: processes takes as they arrive
 ```
 
 Every step can also be run by hand on one take.
@@ -57,6 +58,6 @@ torch 2.8.0+cu128, `mocap-contracts` v0.2.1) and take intake
 (`mocap_extract.intake`: `check_file`, `take_state`).
 alignment done: `alignment.compute_alignment` (offset and drift per camera) and
 `resample.resample_role` (`extract/synced/<role>.mp4` at 30 fps, nearest frame,
-warns past 33.3 ms). Plan:
+warns past 33.3 ms), run on one take with `mocap-extract align`. Plan:
 [`initiatives/baseline/`](initiatives/baseline/baseline.md). Dependencies:
 `mocap-studio/DEPENDENCIES.md`.
