@@ -1,21 +1,28 @@
 ---
 name: mocap-workflow
-description: Governs how Claude plans, branches, implements, and tracks progress on the Mocap Studio project — both the capture pipeline (multi-camera markerless motion capture → Blender, stages P1 Setup to P5 Blender) and the film-production workhorse (pre-production agents, audio, the workflow dashboard) that takes a film from script to delivery — and any work organized as initiatives/epics/tasks under the initiatives/ folder. Use this whenever the user is doing Mocap Studio planning or implementation work — creating or scoping initiatives, epics, or tasks; starting or naming a git branch; implementing a single task file; deciding what counts as done; or figuring out how to hand off work between sessions. Also trigger this when the user mentions "initiative", "epic", "task file", "contract" (in the interface/schema/file-format sense, e.g. session.json or mocap_data.json), or references branches named fixes/..., or when adding/editing an agent or tool that a film project will use. This is a process skill, not a code-generation skill — consult it even for small asks like "start the next task" or "is this task done yet", not just big planning requests.
+description: Governs how Claude plans, branches, implements, and tracks progress on the Mocap Studio project — the project (its code and agents): both the capture pipeline (multi-camera markerless motion capture → Blender, stages P1 Setup to P5 Blender) and the workhorse, the workflow that takes a film from script to delivery (pre-production agents, audio, the workflow dashboard) — and any work organized as initiatives/epics/tasks under the initiatives/ folder. Use this whenever the user is doing Mocap Studio planning or implementation work — creating or scoping initiatives, epics, or tasks; starting or naming a git branch; implementing a single task file; deciding what counts as done; or figuring out how to hand off work between sessions. Also trigger this when the user mentions "initiative", "epic", "task file", "contract" (in the interface/schema/file-format sense, e.g. session.json or mocap_data.json), or references branches named fixes/..., or when adding/editing an agent or tool that a film will use, or when deciding whether something is project, workhorse or film work. This is a process skill, not a code-generation skill — consult it even for small asks like "start the next task" or "is this task done yet", not just big planning requests.
 ---
 
 # Mocap Studio Workflow
 
 This skill encodes how Rafael works on Mocap Studio: a strict initiative → epic → task planning hierarchy, a matching git branch hierarchy, a narrow implementation loop per task, and a small number of hard stop-and-flag rules. The point of all of this is that Rafael runs multiple parallel sessions on separate repo copies. A session that doesn't follow this structure produces work another session (or Rafael) can't safely pick up. When in doubt, favor smaller, more self-contained, more explicitly-flagged over bigger and smoother.
 
-The capture pipeline is documented in `docs/diagrams/` of `mocap-studio` (draw.io, stages P1–P5 and their numbered steps like `3.2 Body and hands`). Initiatives and epics should map onto those stages and steps where they can, so a task can be traced back to the box in the diagram it implements. Film-production repositories (`mocap-preprod`, `mocap-audio`, `mocap-dashboard`) map their work onto the film lifecycle stage they serve (pre-production, production, post-production, delivery) instead.
+The capture pipeline is documented in `docs/diagrams/` of `mocap-studio` (draw.io, stages P1–P5 and their numbered steps like `3.2 Body and hands`). Initiatives and epics should map onto those stages and steps where they can, so a task can be traced back to the box in the diagram it implements. Workhorse repositories (`mocap-preprod`, `mocap-audio`, `mocap-dashboard`) map their work onto the film lifecycle stage they serve (pre-production, production, post-production, delivery) instead.
 
-## Workhorse vs. work
+## Project, workhorse, film
 
-The `mocap-*` repositories are the **workhorse**: reusable tools, agents, contracts and process. A film is the **work**: its script, creator decisions, analysis memos, assets and renders live in that film's own project root (the pilot is TicTac, outside this repo tree), never inside a `mocap-*` repository.
+Three words, kept apart (Rafael, 2026-10-12):
 
-- A tool repository holds nothing film-specific: no film titles, scene names, characters, worklist IDs like `VIS-01`/`SOUND-02`, or creative decisions. If a tool needs an example, use a neutral fixture.
-- Tools and agents take the film's project root as an input and write their outputs under it (e.g. `<project-root>/analysis/`). They never write film material into their own repository.
-- When film-specific material turns up in a tool repository, flag it and move it to the film's project root as a fix — don't build on it.
+- **Project**: the Mocap Studio **code and agents**, meaning `mocap-studio` and every `mocap-*` repository. Project work follows this skill: initiatives, epics, tasks, branches.
+- **Workhorse**: the **workflow** that takes a film from script to delivery: its stages, which agent runs when, gates and approvals. It is defined and implemented in the project (agents in `mocap-preprod`, the workflow model in `mocap-dashboard`, capture P1–P5), so changing the workhorse is project work.
+- **Film**: one production the workhorse runs on. The first is the guinea-pig film (its location is in `mocap-studio/HANDOFF.md`). A film's folder is its **film root**: script, `analysis/` (brief, worklist, memos), assets. **Never call a film a "project"**, so that "the project" always means the code.
+
+Rules that follow:
+
+- **A session works on the project or on a film, never both.** A film session runs the workhorse on one film root and doesn't edit repositories. When it hits a gap or friction, it writes it down as a project task in the right repository, not a quick patch. A project session never makes a film's creative decisions.
+- Repositories hold nothing film-specific: no film titles, scene names, characters, worklist IDs like `VIS-01`/`SOUND-02`, or creative decisions. If a tool needs an example, use a neutral fixture.
+- Tools and agents take the **film root** as an input and write their outputs under it (e.g. `<film-root>/analysis/`), never into a repository.
+- When film-specific material turns up in a repository, flag it and move it to its film root as a fix. Don't build on it.
 
 ## Stack
 
@@ -122,7 +129,7 @@ Push back — stop and bring options to Rafael instead of proceeding — in thes
 - **An undeclared dependency surfaces mid-implementation** (a package that conflicts with another venv, a model that needs a GPU, a step that turns out to need a new camera or sensor). This is an implementation-time discovery, not a planning failure — flag it, propose options, and let Rafael decide how to handle it rather than patching around it.
 - **Anything that would cause architectural divergence or compromise the pipeline's integrity**, even if it's technically what a task's wording could be read to ask for — e.g. silently changing a shared file contract that other stages read, editing the locked NLA base track instead of a correction track, or collecting/retaining actor face or biometric data beyond what the session's consent covers. These get refused or flagged, regardless of framing.
 - **Scope creep past a feature's boundary** that would pull in architecture decisions the current initiative/epic wasn't scoped to make (choosing the capture OS, a retargeting tool, adding LiDAR/depth hardware, etc.).
-- **Stack or boundary divergence** — a language other than Python, an inter-app protocol that bypasses Harpia, a repo-local environment that contradicts `DEPENDENCIES.md`, or film-specific material landing in a tool repository (see "Workhorse vs. work").
+- **Stack or boundary divergence** — a language other than Python, an inter-app protocol that bypasses Harpia, a repo-local environment that contradicts `DEPENDENCIES.md`, or film-specific material landing in a repository (see "Project, workhorse, film").
 
 When in doubt about whether something is small enough to just do, it isn't — bring it up.
 
