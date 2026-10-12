@@ -1,6 +1,6 @@
-## 3. Sync tolerance from the exposure time
+## 1. Sync tolerance from the exposure time
 
-- **Depends on:** 1 (offsets and drift), 2 (resampling); `take.json` with the
+- **Depends on:** alignment 1 (offsets and drift), 2 (resampling); `take.json` with the
   camera control results recorded by `mocap-capture` (camera-controls)
 - **Contract:**
   - In: `take.json` (per-camera control results), the aligned timeline
