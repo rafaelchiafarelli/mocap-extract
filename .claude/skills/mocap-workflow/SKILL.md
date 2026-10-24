@@ -77,11 +77,11 @@ merges.
 - `main` — release branch. Versions used for real capture sessions get cut from here. Treat it as something people outside this session depend on (an actor and a crew may be waiting on it).
 - `dev` — development branch. "Not broken" means the full test suite passes — nothing more, nothing less. Half-finished work is fine to sit on `dev`; work that breaks a test is not. In a repository with no code yet (agents, specs and docs only), "not broken" means every link and referenced path resolves and agent files still parse.
 
-**Fix branches** are the one exception to flat names: `fixes/<id>/<name_of_the_bug>`, where `<id>` is an incrementing hex counter starting at `000000` (go to `ffffff`, then widen to 7 hex digits if that's ever exhausted — there's no ticket tracker yet, so this counter is the only ID). The `fixes/` prefix is slash-namespaced precisely because a fix is *not* part of an initiative chain and never nests under one; correspondingly, never create a flat branch literally named `fixes`, `features`, `epics`, or `tasks` outside the scheme above. Fixes normally branch off `dev` and merge back into `dev`. A fix can branch off `main` instead when it's urgent enough to need a release-line patch (e.g. something blocking a scheduled capture session) — in that case merge it back to `main`, and also bring it into `dev` so the branches don't silently diverge (flag this to Rafael rather than assuming — confirm before merging a main-line fix back into dev if there's any conflict risk).
+**Fix branches** are the one exception to flat names: `fixes/<id>/<name_of_the_bug>`, where `<id>` is an incrementing hex counter starting at `000000` (go to `ffffff`, then widen to 7 hex digits if that's ever exhausted — there's no ticket tracker yet, so this counter is the only ID). The `fixes/` prefix is slash-namespaced precisely because a fix is *not* part of an initiative chain and never nests under one; correspondingly, never create a flat branch literally named `fixes`, `features`, `epics`, or `tasks` outside the scheme above. A fix merges only with the as-built docs of what it changed updated in the same commit, like a task. Fixes normally branch off `dev` and merge back into `dev`. A fix can branch off `main` instead when it's urgent enough to need a release-line patch (e.g. something blocking a scheduled capture session) — in that case merge it back to `main`, and also bring it into `dev` so the branches don't silently diverge (flag this to Rafael rather than assuming — confirm before merging a main-line fix back into dev if there's any conflict risk).
 
 **Merge direction:** `<task> → tasks → <epic> → epics → <initiative> → features → dev → main`, every hop a `--no-ff` merge. A level only merges up once its own DoD is satisfied:
 
-- **`<task>`** — its contract is delivered and the full test suite passes.
+- **`<task>`** — its contract is delivered, the full test suite passes, and the **as-built docs** of everything it changed are updated in the same commit (see "As-built documentation").
 - **`tasks`** — every task branch scoped to the epic has merged into it.
 - **`<epic>`** — `tasks` has merged in and the epic's acceptance gate, if it has one, passes (e.g. a recorded test take processes end to end through that step).
 - **`epics`** — every epic branch of the initiative has merged into it.
@@ -113,13 +113,23 @@ Once a task file is ready and its branch exists, the loop is:
 1. Read the task file.
 2. Implement exactly what it asks.
 3. Run the full test suite (not just new tests — regressions anywhere are still regressions).
-4. Update docs pertinent to that task's contract, if the contract affects them (including the diagram box for that step).
+4. Update docs pertinent to that task's contract, if the contract affects them (including the diagram box for that step), and **always** the as-built docs of every folder, module and stage the change touched.
 5. Mark the task file itself as done.
 6. Commit, merge upward per the branch rules above, report, and stop.
 
 **Scope boundary:** touch only the code, assets, and docs pertinent to *this* task's contract without asking. Anything outside that — another task's contract, an epic's branch structure, a shared file format, hardware choices, unrelated files — needs Rafael's go-ahead first. This is the whole rule; if something falls outside the task file's stated contract, it's a stop-and-ask by definition, not a judgment call to make in the moment.
 
 **Large binaries stay out of git.** Raw takes (`.mkv`), aligned videos, `.npy` arrays, model weights, and renders are referenced by path or fetched by a script — never committed directly. Small fixtures needed by tests are the exception and should be kept as small as possible.
+
+## As-built documentation
+
+**Every modification updates the as-built docs** (Rafael, 2026-10-24): tasks, fixes and any other commit that changes code, so the docs always describe the code as it is and a second session can check them against it.
+
+- **Format** (model: `harpia`): one `CLAUDE.md` per folder (`# <folder> — <purpose>`, then **Role**, **Entry points**, **Inputs → Outputs**, `## Files` with one bullet per file, `## Key facts / gotchas`, `## Touchpoints`), a root `<name>.process.md` with the stage-by-stage spec of what the program does, and, for a large module, a sibling `<module>.as-built.md` linked from its folder's bullet. Claude Code loads a folder's `CLAUDE.md` when it works there, so the context arrives with the code.
+- **Content:** what the code *does*, never what it should do (plans live in `initiatives/`); every claim points to `file:line`; a bug or oddity found goes under gotchas and becomes a fix branch, never a silent edit.
+- **In the same commit:** the change and its as-built update travel together, like the task file and its done marker. A new file gets its bullet, a removed file loses it, a new folder gets its `CLAUDE.md`, a changed stage is updated in `<name>.process.md`.
+- **Review:** a separate session can be asked to check the as-built against the code (every `file:line` resolves, every file has its bullet, every claim matches the code). A mismatch is a fix branch, and an unexplained one is a red flag about the commit that caused it.
+- **Repositories not documented yet:** before their next substantial work they get an `as-built` initiative 0 (as `mocap-writer` did). Until then, a change still adds or updates the `CLAUDE.md` of the folders it touches.
 
 ## Showing work to Rafael
 
