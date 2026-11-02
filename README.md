@@ -57,7 +57,7 @@ FreeMoCap's headless entry point is
 ## Status
 
 bootstrap done: package skeleton, CLI, FreeMoCap environment (Python 3.12,
-torch 2.8.0+cu128, `mocap-contracts` v0.2.1) and take intake
+torch 2.8.0+cu128, `mocap-contracts` v0.8.0) and take intake
 (`mocap_extract.intake`: `check_file`, `take_state`).
 alignment done: `alignment.compute_alignment` (offset and drift per camera) and
 `resample.resample_role` (`extract/synced/<role>.mp4` at 30 fps, nearest frame,

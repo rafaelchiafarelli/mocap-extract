@@ -10,7 +10,7 @@ readme = "README.md"
 # FreeMoCap 1.8.2 and skellytracker need <3.13; 3.12 is the shared minor (DEPENDENCIES.md).
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "mocap-contracts[zmq] @ git+https://github.com/rafaelchiafarelli/mocap-contracts.git@v0.2.1",
+    "mocap-contracts[zmq] @ git+https://github.com/rafaelchiafarelli/mocap-contracts.git@v0.8.0",
     "freemocap==1.8.2",
     "opencv-contrib-python==4.8.*",
 ]
