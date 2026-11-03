@@ -77,7 +77,7 @@ merges.
 - `main` — release branch. Versions used for real capture sessions get cut from here. Treat it as something people outside this session depend on (an actor and a crew may be waiting on it).
 - `dev` — development branch. "Not broken" means the full test suite passes — nothing more, nothing less. Half-finished work is fine to sit on `dev`; work that breaks a test is not. In a repository with no code yet (agents, specs and docs only), "not broken" means every link and referenced path resolves and agent files still parse.
 
-**Fix branches** are the one exception to flat names: `fixes/<id>/<name_of_the_bug>`, where `<id>` is an incrementing hex counter starting at `000000` (go to `ffffff`, then widen to 7 hex digits if that's ever exhausted — there's no ticket tracker yet, so this counter is the only ID). The `fixes/` prefix is slash-namespaced precisely because a fix is *not* part of an initiative chain and never nests under one; correspondingly, never create a flat branch literally named `fixes`, `features`, `epics`, or `tasks` outside the scheme above. A fix merges only with the as-built docs of what it changed updated in the same commit, like a task. Fixes normally branch off `dev` and merge back into `dev`. A fix can branch off `main` instead when it's urgent enough to need a release-line patch (e.g. something blocking a scheduled capture session) — in that case merge it back to `main`, and also bring it into `dev` so the branches don't silently diverge (flag this to Rafael rather than assuming — confirm before merging a main-line fix back into dev if there's any conflict risk).
+**Fix branches** are the one exception to flat names: `fixes/<id>/<name_of_the_bug>`, where `<id>` is an incrementing hex counter starting at `000000` (go to `ffffff`, then widen to 7 hex digits if that's ever exhausted — there's no ticket tracker yet, so this counter is the only ID). The `fixes/` prefix is slash-namespaced precisely because a fix is *not* part of an initiative chain and never nests under one; correspondingly, never create a flat branch literally named `fixes`, `features`, `epics`, or `tasks` outside the scheme above. A fix merges only with the as-built docs of what it changed updated in the same commit, like a task; a fix for a recorded bug also marks its bug file fixed in that commit (see "Bugs"). Fixes normally branch off `dev` and merge back into `dev`. A fix can branch off `main` instead when it's urgent enough to need a release-line patch (e.g. something blocking a scheduled capture session) — in that case merge it back to `main`, and also bring it into `dev` so the branches don't silently diverge (flag this to Rafael rather than assuming — confirm before merging a main-line fix back into dev if there's any conflict risk).
 
 **Merge direction:** `<task> → tasks → <epic> → epics → <initiative> → features → dev → main`, every hop a `--no-ff` merge. A level only merges up once its own DoD is satisfied:
 
@@ -110,6 +110,7 @@ A task is only ready to implement when:
 
 Once a task file is ready and its branch exists, the loop is:
 
+0. **Read the architecture first, then the documentation** (Rafael, 2026-10-31): when the repository has an architecture overview (in `mocap-writer`, `doc/architecture.md`, the agents' version; `doc/architecture/` holds the same pages for human architects), read it before anything else, then the as-built docs of the folders the task touches. This applies to fixes and planning too.
 1. Read the task file.
 2. Implement exactly what it asks.
 3. Run the full test suite (not just new tests — regressions anywhere are still regressions).
@@ -121,14 +122,27 @@ Once a task file is ready and its branch exists, the loop is:
 
 **Large binaries stay out of git.** Raw takes (`.mkv`), aligned videos, `.npy` arrays, model weights, and renders are referenced by path or fetched by a script — never committed directly. Small fixtures needed by tests are the exception and should be kept as small as possible.
 
+## Bugs
+
+Fixing every bug as soon as it turns up keeps the project from moving forward (Rafael, 2026-10-24). A bug found is **recorded**, not fixed on the spot, and gets fixed when it gets in the way.
+
+- **Where:** each repository's `initiatives/bugs/`, an initiative like the others: `bugs.md`, epics by area (e.g. `editor`, `import-export`, `as-built-docs`), one file per bug in `epics/<area>/tasks/<n>-<name>.md`.
+- **A bug file holds:** symptom, where (`file:line`), how to reproduce (or "found by reading the code"), impact, and **Status** — `Open`, or `Fixed (<date>) — fixes/<id>/<name>`. One sentence on the likely fix at most; a fix that needs design or a contract change is planned as a task in its own initiative.
+- **When to fix:** only when the bug gets in the way — it blocks a task, hurts a film session, or Rafael asks. Until then the project moves forward around it. A bug that blocks a scheduled capture session is fixed at once (see "Fix branches", including the main-line case).
+- **How to fix:** a `fixes/<id>/<name>` branch off `dev`, never the initiative chain, so the clone's feature work goes on. The fix commit marks the bug file fixed and updates the as-built (the gotcha goes away or changes).
+- **After the fix is pushed:** a follow-up commit deletes the bug file and turns every link to it into plain text (e.g. `bugs/editor/2, fixed <date>`), so `initiatives/bugs/` holds only open bugs and git history keeps the rest (Rafael, 2026-10-26). Bug numbers are never reused; the epics list keeps the last number used.
+- **Recording is always in scope:** adding a bug file is not scope creep, so a task that finds a bug records it in its own commit without asking. The bug's gotcha links to the bug file.
+
 ## As-built documentation
 
 **Every modification updates the as-built docs** (Rafael, 2026-10-24): tasks, fixes and any other commit that changes code, so the docs always describe the code as it is and a second session can check them against it.
 
-- **Format** (model: `harpia`): one `CLAUDE.md` per folder (`# <folder> — <purpose>`, then **Role**, **Entry points**, **Inputs → Outputs**, `## Files` with one bullet per file, `## Key facts / gotchas`, `## Touchpoints`), a root `<name>.process.md` with the stage-by-stage spec of what the program does, and, for a large module, a sibling `<module>.as-built.md` linked from its folder's bullet. Claude Code loads a folder's `CLAUDE.md` when it works there, so the context arrives with the code.
-- **Content:** what the code *does*, never what it should do (plans live in `initiatives/`); every claim points to `file:line`; a bug or oddity found goes under gotchas and becomes a fix branch, never a silent edit.
+- **Format** (model: `harpia`): one `CLAUDE.md` per folder (`# <folder> — <purpose>`, then **Role**, **Entry points**, **Inputs → Outputs**, `## Files` with one bullet per file, `## Key facts / gotchas`, `## Touchpoints`), a root `<name>.process.md` with the stage-by-stage spec of what the program does, and, for a large module, a sibling `<module>.as-built.md` linked from its folder's bullet. Claude Code loads a folder's `CLAUDE.md` when it works there, so the context arrives with the code. A folder with no code of its own (only data files or subfolders) is covered by its parent's `CLAUDE.md` instead, as long as the parent lists each of its files (Rafael, 2026-10-26).
+- **Content:** what the code *does*, never what it should do (plans live in `initiatives/`); every claim points to `file:line`; a bug or oddity found goes under gotchas, linked to its bug file in `initiatives/bugs/` (see "Bugs"), never a silent edit.
 - **In the same commit:** the change and its as-built update travel together, like the task file and its done marker. A new file gets its bullet, a removed file loses it, a new folder gets its `CLAUDE.md`, a changed stage is updated in `<name>.process.md`.
-- **Review:** a separate session can be asked to check the as-built against the code (every `file:line` resolves, every file has its bullet, every claim matches the code). A mismatch is a fix branch, and an unexplained one is a red flag about the commit that caused it.
+- **References follow the code** (Rafael, 2026-10-31): every code change also updates the `file:line` references into the files it changed, in **every** doc of the repository (as-built, process spec, bug and task files), not only the ones describing the change: lines added or removed above a reference move it. Before the commit, every reference into a changed file must land on what it names. A reference found off in a file the commit didn't touch is fixed in its own commit, never left.
+- **Architecture follows too** (Rafael, 2026-10-31): a change to the architecture (a part added or removed, a different flow between parts, a new record or file format, a changed behaviour that the overview describes) also updates the architecture overview in the same commit: the agents' `doc/architecture.md` and the human pages in `doc/architecture/`, both rebuilt from the as-built docs, never from memory, with the same content. The online copy, if there is one, is then republished from the repository's pages.
+- **Review:** a separate session can be asked to check the as-built against the code (every `file:line` resolves, every file has its bullet, every claim matches the code). A mismatch is recorded as a bug (epic `as-built-docs`), and an unexplained one is a red flag about the commit that caused it.
 - **Repositories not documented yet:** before their next substantial work they get an `as-built` initiative 0 (as `mocap-writer` did). Until then, a change still adds or updates the `CLAUDE.md` of the folders it touches.
 
 ## Showing work to Rafael
@@ -146,6 +160,15 @@ Push back — stop and bring options to Rafael instead of proceeding — in thes
 - **Stack or boundary divergence** — a language other than Python, an inter-app protocol that bypasses Harpia, a repo-local environment that contradicts `DEPENDENCIES.md`, or film-specific material landing in a repository (see "Project, workhorse, film").
 
 When in doubt about whether something is small enough to just do, it isn't — bring it up.
+
+## Finishing an initiative
+
+A finished initiative leaves the working tree (Rafael, 2026-10-24): `initiatives/` holds only work still to do, and git history keeps every task file of what was done.
+
+- **When:** once the initiative's gate passes. A gate with a step still open (a film session, Rafael's approval) keeps the folder until that step closes, unless Rafael says otherwise.
+- **How:** the commit that marks the initiative done also deletes `initiatives/<initiative>/`, epics and tasks included. `initiatives/README.md` keeps one line for it: `**<initiative>** — <goal> (done <date>; history: git log -- initiatives/<initiative>)`.
+- **Links:** in the same commit, every link into the deleted folder (bug files, as-built gotchas, other initiatives, other repositories) is rewritten to name the initiative in plain text, or dropped. A dangling link breaks `dev` like a failing test.
+- **Never deleted:** `initiatives/bugs/`, which is a backlog, not an initiative that finishes.
 
 ## Tracking progress
 
