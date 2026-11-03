@@ -22,4 +22,4 @@ Rules specific to this repository:
 
 | Initiative | Status |
 |---|---|
-| [baseline](baseline/baseline.md) | Planned — not started |
+| [baseline](baseline/baseline.md) | In progress — bootstrap, alignment and calibration done; body/2, quality and watch open |
